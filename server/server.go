@@ -21,6 +21,26 @@ type server struct {
 
 // implement API Sum
 func (*server) Sum(ctx context.Context, in *calculatorpb.SumRequest) (*calculatorpb.SumResponse, error) {
+	log.Println("Sum function is called")
+	res := &calculatorpb.SumResponse{
+		Result: in.GetNum1() + in.GetNum2(),
+	}
+
+	return res, nil
+}
+
+// implement API SumWithDeadLine
+func (*server) SumWithDeadline(ctx context.Context, in *calculatorpb.SumRequest) (*calculatorpb.SumResponse, error) {
+	log.Println("SumWithDeadline function is called")
+
+	for i := 0; i < 5; i++ {
+		if ctx.Err() == context.Canceled {
+			log.Println("Context canceled!")
+			return nil, status.Errorf(codes.Canceled, "Client canceled request!")
+		}
+		time.Sleep(1 * time.Second)
+	}
+
 	res := &calculatorpb.SumResponse{
 		Result: in.GetNum1() + in.GetNum2(),
 	}
@@ -144,7 +164,7 @@ func main() {
 
 	calculatorpb.RegisterCalculatorpbServiceServer(s, &server{})
 
-	fmt.Printf("Server is starting at %v", PORT)
+	fmt.Printf("Server is starting at %v\n", PORT)
 
 	err = s.Serve(lis)
 

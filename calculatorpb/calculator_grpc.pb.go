@@ -23,6 +23,7 @@ const _ = grpc.SupportPackageIsVersion7
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type CalculatorpbServiceClient interface {
 	Sum(ctx context.Context, in *SumRequest, opts ...grpc.CallOption) (*SumResponse, error)
+	SumWithDeadline(ctx context.Context, in *SumRequest, opts ...grpc.CallOption) (*SumResponse, error)
 	PrimeNumberDecomposition(ctx context.Context, in *PNDReuqest, opts ...grpc.CallOption) (CalculatorpbService_PrimeNumberDecompositionClient, error)
 	Average(ctx context.Context, opts ...grpc.CallOption) (CalculatorpbService_AverageClient, error)
 	FindMax(ctx context.Context, opts ...grpc.CallOption) (CalculatorpbService_FindMaxClient, error)
@@ -40,6 +41,15 @@ func NewCalculatorpbServiceClient(cc grpc.ClientConnInterface) CalculatorpbServi
 func (c *calculatorpbServiceClient) Sum(ctx context.Context, in *SumRequest, opts ...grpc.CallOption) (*SumResponse, error) {
 	out := new(SumResponse)
 	err := c.cc.Invoke(ctx, "/calculator.CalculatorpbService/Sum", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *calculatorpbServiceClient) SumWithDeadline(ctx context.Context, in *SumRequest, opts ...grpc.CallOption) (*SumResponse, error) {
+	out := new(SumResponse)
+	err := c.cc.Invoke(ctx, "/calculator.CalculatorpbService/SumWithDeadline", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -157,6 +167,7 @@ func (c *calculatorpbServiceClient) Square(ctx context.Context, in *SquareReques
 // for forward compatibility
 type CalculatorpbServiceServer interface {
 	Sum(context.Context, *SumRequest) (*SumResponse, error)
+	SumWithDeadline(context.Context, *SumRequest) (*SumResponse, error)
 	PrimeNumberDecomposition(*PNDReuqest, CalculatorpbService_PrimeNumberDecompositionServer) error
 	Average(CalculatorpbService_AverageServer) error
 	FindMax(CalculatorpbService_FindMaxServer) error
@@ -170,6 +181,9 @@ type UnimplementedCalculatorpbServiceServer struct {
 
 func (UnimplementedCalculatorpbServiceServer) Sum(context.Context, *SumRequest) (*SumResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Sum not implemented")
+}
+func (UnimplementedCalculatorpbServiceServer) SumWithDeadline(context.Context, *SumRequest) (*SumResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SumWithDeadline not implemented")
 }
 func (UnimplementedCalculatorpbServiceServer) PrimeNumberDecomposition(*PNDReuqest, CalculatorpbService_PrimeNumberDecompositionServer) error {
 	return status.Errorf(codes.Unimplemented, "method PrimeNumberDecomposition not implemented")
@@ -210,6 +224,24 @@ func _CalculatorpbService_Sum_Handler(srv interface{}, ctx context.Context, dec 
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(CalculatorpbServiceServer).Sum(ctx, req.(*SumRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _CalculatorpbService_SumWithDeadline_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SumRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CalculatorpbServiceServer).SumWithDeadline(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/calculator.CalculatorpbService/SumWithDeadline",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CalculatorpbServiceServer).SumWithDeadline(ctx, req.(*SumRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -315,6 +347,10 @@ var CalculatorpbService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Sum",
 			Handler:    _CalculatorpbService_Sum_Handler,
+		},
+		{
+			MethodName: "SumWithDeadline",
+			Handler:    _CalculatorpbService_SumWithDeadline_Handler,
 		},
 		{
 			MethodName: "Square",
